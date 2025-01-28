@@ -105,7 +105,7 @@ vim.opt.number = true
 -- vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
-vim.opt.mouse = 'a'
+-- vim.opt.mouse = 'a'
 
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
@@ -616,7 +616,19 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {
+          capabilities = {
+            offsetEncoding = { 'utf-8', 'utf-16' },
+            textDocument = {
+              completion = {
+                editsNearCursor = true,
+              },
+            },
+          },
+          cmd = { 'clangd' },
+          filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
+          single_file_support = true,
+        },
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -932,17 +944,17 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
@@ -972,3 +984,30 @@ require('lazy').setup({
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+-- ビジュアルモードでのインデント後に選択を保持するキーマッピング
+vim.keymap.set('v', '<', '<gv', { noremap = true, silent = true })
+vim.keymap.set('v', '>', '>gv', { noremap = true, silent = true })
+
+-- Neovimのフォーカスが失われたときにマウスモードをオフにし、フォーカスが戻ったときにマウスモードをオンにする
+local function disable_mouse_mode()
+  vim.opt.mouse = ''
+end
+
+local function enable_mouse_mode()
+  vim.opt.mouse = 'a'
+end
+
+vim.api.nvim_create_augroup('FocusMouseToggle', { clear = true })
+
+vim.api.nvim_create_autocmd('FocusLost', {
+  group = 'FocusMouseToggle',
+  callback = disable_mouse_mode,
+})
+
+vim.api.nvim_create_autocmd('FocusGained', {
+  group = 'FocusMouseToggle',
+  callback = enable_mouse_mode,
+})
+
+-- nvim-lspconfig のキーマッピング
